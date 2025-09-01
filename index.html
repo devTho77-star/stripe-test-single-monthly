@@ -15,8 +15,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        body {
- 
+                body {
             color: transparent;
             min-height: 100vh;
             display: flex;
@@ -24,6 +23,10 @@
             align-items: center;
             padding: 20px;
             position: relative;
+        }
+        
+        body > * {
+            margin-top: 50px; /* pushes everything down */
         }
         
         body::before {
@@ -1040,6 +1043,7 @@
     </script>
 </body>
 </html>
+
 
 
 
