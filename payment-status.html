@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Status</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #32325d;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: -1;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            text-align: center;
+            transform: scale(0.95);
+            opacity: 0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #6772e5 0%, #5469d4 100%);
+            color: white;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to bottom right, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            transform: rotate(30deg);
+            z-index: 1;
+        }
+        
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .success .icon-container {
+            background: linear-gradient(135deg, #24b47e 0%, #2dd9a3 100%);
+            animation: scaleIn 0.5s ease-out 0.3s forwards;
+        }
+        
+        .failure .icon-container {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            animation: shake 0.5s ease-out 0.3s forwards;
+        }
+        
+        .icon-container i {
+            font-size: 40px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .details {
+            background: #f6f9fc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .details::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #6772e5, #5469d4);
+        }
+        
+        .success .details::after {
+            background: linear-gradient(90deg, #24b47e, #2dd9a3);
+        }
+        
+        .failure .details::after {
+            background: linear-gradient(90deg, #ff9a9e, #fad0c4);
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e6ebf1;
+            position: relative;
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        
+        .detail-row:nth-child(1) { transition: all 0.4s ease 0.4s; }
+        .detail-row:nth-child(2) { transition: all 0.4s ease 0.5s; }
+        .detail-row:nth-child(3) { transition: all 0.4s ease 0.6s; }
+        .detail-row:nth-child(4) { transition: all 0.4s ease 0.7s; }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #6b7c93;
+            font-weight: 500;
+        }
+        
+        .detail-value {
+            color: #32325d;
+            font-weight: 600;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .btn:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6772e5 0%, #5469d4 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 5px 15px rgba(103, 114, 229, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(103, 114, 229, 0.4);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #6772e5;
+            border: 2px solid #e6ebf1;
+        }
+        
+        .btn-secondary:hover {
+            background: #f6f9fc;
+        }
+        
+        .help {
+            margin-top: 25px;
+            color: #6b7c93;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease 1s;
+        }
+        
+        .help a {
+            color: #6772e5;
+            text-decoration: none;
+            position: relative;
+        }
+        
+        .help a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #6772e5;
+            transition: width 0.3s ease;
+        }
+        
+        .help a:hover::after {
+            width: 100%;
+        }
+        
+        .confirmation-message {
+            margin: 15px 0;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease 0.8s;
+        }
+        
+        .progress-bar {
+            height: 4px;
+            width: 100%;
+            background: #e6ebf1;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: none;
+        }
+        
+        .progress-bar-value {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #6772e5, #5469d4);
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+        
+        .success .progress-bar-value {
+            background: linear-gradient(90deg, #24b47e, #2dd9a3);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+        
+        @keyframes scaleIn {
+            0% { 
+                transform: scale(0); 
+                opacity: 0; 
+            }
+            70% { 
+                transform: scale(1.1); 
+            }
+            100% { 
+                transform: scale(1); 
+                opacity: 1; 
+            }
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0) rotate(0); }
+            20% { transform: translateX(-10px) rotate(-5deg); }
+            40% { transform: translateX(10px) rotate(5deg); }
+            60% { transform: translateX(-10px) rotate(-5deg); }
+            80% { transform: translateX(10px) rotate(5deg); }
+            100% { transform: translateX(0) rotate(0); }
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
+        }
+        
+        .animate-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        
+        .animate-details .detail-row {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .animate-content .confirmation-message,
+        .animate-content .help {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #32325d;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .actions {
+                flex-direction: column;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 15px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .icon-container {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .icon-container i {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Success Page -->
+    <div class="container success" id="success-page" style="display: none;">
+        <div class="header">
+            <div class="icon-container">
+                <i class="fas fa-check"></i>
+            </div>
+            <h1>Payment Successful!</h1>
+            <p>Thank you for your purchase</p>
+        </div>
+        
+        <div class="content">
+            <div class="details">
+                <div class="detail-row">
+                    <span class="detail-label">Transaction ID:</span>
+                    <span class="detail-value" id="success-transaction-id">1234567890</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Amount:</span>
+                    <span class="detail-value" id="success-amount">€100.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value" id="success-date">October 15, 2023</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method:</span>
+                    <span class="detail-value" id="success-method">Credit Card (****4242)</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">Completed</span>
+                </div>
+            </div>
+            
+            <p class="confirmation-message">A confirmation email has been sent to your email address.</p>
+            
+            <div class="progress-bar" id="download-progress">
+                <div class="progress-bar-value"></div>
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-primary" id="download-invoice">Download Invoice</button>
+                <a href="/" class="btn btn-secondary">Back to Home</a>
+            </div>
+            
+            <div class="help">
+                Need help? Contact <a href="mailto:support@example.com">support@example.com</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Failure Page -->
+    <div class="container failure" id="failure-page" style="display: none;">
+        <div class="header">
+            <div class="icon-container">
+                <i class="fas fa-times"></i>
+            </div>
+            <h1>Payment Failed</h1>
+            <p>We couldn't process your payment</p>
+        </div>
+        
+        <div class="content">
+            <div class="details">
+                <div class="detail-row">
+                    <span class="detail-label">Error Code:</span>
+                    <span class="detail-value" id="error-code">card_declined</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Amount:</span>
+                    <span class="detail-value" id="failure-amount">€100.00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date:</span>
+                    <span class="detail-value" id="failure-date">October 15, 2023</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value">Failed</span>
+                </div>
+            </div>
+            
+            <p class="confirmation-message" id="error-message">Your card was declined. Please try again with a different payment method.</p>
+            
+            <div class="actions">
+                <a href="/payment.html" class="btn btn-primary">Try Again</a>
+                <a href="/" class="btn btn-secondary">Back to Home</a>
+            </div>
+            
+            <div class="help">
+                Need help? Contact <a href="mailto:support@example.com">support@example.com</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get URL parameters to determine which page to show
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status') || 'success'; // Default to success for demo
+            
+            if (status === 'success') {
+                showSuccessPage();
+            } else {
+                showFailurePage();
+            }
+            
+            // Add event listener for invoice download
+            document.getElementById('download-invoice').addEventListener('click', generateInvoice);
+        });
+        
+        function showSuccessPage() {
+            const successPage = document.getElementById('success-page');
+            successPage.style.display = 'block';
+            
+            // Set dynamic data
+            const transactionId = generateTransactionId();
+            const amount = getURLParam('amount') || '€100.00';
+            const date = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const paymentMethod = getURLParam('method') || 'Credit Card (****4242)';
+            
+            document.getElementById('success-transaction-id').textContent = transactionId;
+            document.getElementById('success-amount').textContent = amount;
+            document.getElementById('success-date').textContent = date;
+            document.getElementById('success-method').textContent = paymentMethod;
+            
+            // Animate page
+            setTimeout(() => {
+                successPage.classList.add('animate-in');
+                
+                // Animate details with delay
+                setTimeout(() => {
+                    successPage.querySelector('.details').classList.add('animate-details');
+                    successPage.querySelector('.content').classList.add('animate-content');
+                }, 300);
+            }, 100);
+        }
+        
+        function showFailurePage() {
+            const failurePage = document.getElementById('failure-page');
+            failurePage.style.display = 'block';
+            
+            // Set dynamic data for failure page
+            const errorCode = getURLParam('error_code') || 'card_declined';
+            const errorMessage = getURLParam('message') || 'Your card was declined. Please try again with a different payment method.';
+            const amount = getURLParam('amount') || '€100.00';
+            const date = new Date().toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            document.getElementById('error-code').textContent = errorCode;
+            document.getElementById('failure-amount').textContent = amount;
+            document.getElementById('failure-date').textContent = date;
+            document.getElementById('error-message').textContent = errorMessage;
+            
+            // Animate page
+            setTimeout(() => {
+                failurePage.classList.add('animate-in');
+                
+                // Animate details with delay
+                setTimeout(() => {
+                    failurePage.querySelector('.details').classList.add('animate-details');
+                    failurePage.querySelector('.content').classList.add('animate-content');
+                }, 300);
+            }, 100);
+        }
+        
+        function generateTransactionId() {
+            return 'txn_' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
+        
+        function getURLParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+        
+        function generateInvoice() {
+            const downloadBtn = document.getElementById('download-invoice');
+            const progressBar = document.getElementById('download-progress');
+            const progressValue = document.querySelector('.progress-bar-value');
+            
+            // Show progress bar
+            progressBar.style.display = 'block';
+            downloadBtn.disabled = true;
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 5;
+                progressValue.style.width = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    
+                    // Create invoice content
+                    const invoiceContent = createInvoiceContent();
+                    
+                    // Generate PDF
+                    const doc = new jsPDF();
+                    
+                    doc.setFillColor(103, 114, 229);
+                    doc.rect(0, 0, 210, 30, 'F');
+                    
+                    doc.setFontSize(22);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('INVOICE', 105, 17, { align: 'center' });
+                    
+                    doc.setFontSize(12);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('Thank you for your business!', 105, 24, { align: 'center' });
+                    
+                    // Add content
+                    doc.setFontSize(10);
+                    doc.setTextColor(0, 0, 0);
+                    
+                    let yPosition = 45;
+                    
+                    // Company and client info
+                    doc.setFont(undefined, 'bold');
+                    doc.text('From:', 20, yPosition);
+                    doc.setFont(undefined, 'normal');
+                    doc.text('Your Company Name', 20, yPosition + 5);
+                    doc.text('123 Business Street', 20, yPosition + 10);
+                    doc.text('Business City, 10001', 20, yPosition + 15);
+                    doc.text('contact@yourcompany.com', 20, yPosition + 20);
+                    
+                    doc.setFont(undefined, 'bold');
+                    doc.text('To:', 120, yPosition);
+                    doc.setFont(undefined, 'normal');
+                    doc.text('Client Name', 120, yPosition + 5);
+                    doc.text('123 Client Street', 120, yPosition + 10);
+                    doc.text('Client City, 10001', 120, yPosition + 15);
+                    doc.text('client@email.com', 120, yPosition + 20);
+                    
+                    yPosition += 35;
+                    
+                    // Invoice details
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Invoice Number:', 20, yPosition);
+                    doc.text('Invoice Date:', 20, yPosition + 7);
+                    doc.text('Amount:', 20, yPosition + 14);
+                    doc.text('Payment Method:', 20, yPosition + 21);
+                    
+                    doc.setFont(undefined, 'normal');
+                    doc.text(document.getElementById('success-transaction-id').textContent, 60, yPosition);
+                    doc.text(document.getElementById('success-date').textContent, 60, yPosition + 7);
+                    doc.text(document.getElementById('success-amount').textContent, 60, yPosition + 14);
+                    doc.text(document.getElementById('success-method').textContent, 60, yPosition + 21);
+                    
+                    yPosition += 35;
+                    
+                    // Item description
+                    doc.setDrawColor(200, 200, 200);
+                    doc.line(20, yPosition, 190, yPosition);
+                    
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Description', 20, yPosition + 7);
+                    doc.text('Amount', 180, yPosition + 7, { align: 'right' });
+                    
+                    doc.line(20, yPosition + 10, 190, yPosition + 10);
+                    
+                    doc.setFont(undefined, 'normal');
+                    doc.text('Premium Service Package', 20, yPosition + 17);
+                    doc.text(document.getElementById('success-amount').textContent, 180, yPosition + 17, { align: 'right' });
+                    
+                    doc.line(20, yPosition + 20, 190, yPosition + 20);
+                    
+                    doc.setFont(undefined, 'bold');
+                    doc.text('TOTAL', 20, yPosition + 27);
+                    doc.text(document.getElementById('success-amount').textContent, 180, yPosition + 27, { align: 'right' });
+                    
+                    doc.line(20, yPosition + 30, 190, yPosition + 30);
+                    
+                    yPosition += 45;
+                    
+                    // Terms and conditions
+                    doc.setFontSize(9);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text('Terms and Conditions: Payment is due within 15 days. Thank you for your business!', 20, yPosition);
+                    
+                    // Save the PDF
+                    doc.save(`invoice-${document.getElementById('success-transaction-id').textContent}.pdf`);
+                    
+                    // Hide progress bar and show success message
+                    setTimeout(() => {
+                        progressBar.style.display = 'none';
+                        downloadBtn.disabled = false;
+                        showToast('Invoice downloaded successfully!');
+                    }, 500);
+                }
+            }, 50);
+        }
+        
+        function createInvoiceContent() {
+            // This would create the HTML content for the invoice
+            // In a real implementation, you might use this with html2canvas
+            // to generate a more visually appealing invoice
+            return `
+                <div style="padding: 20px; font-family: Arial, sans-serif;">
+                    <h1 style="color: #6772e5; text-align: center;">INVOICE</h1>
+                    <hr>
+                    <div style="display: flex; justify-content: space-between; margin: 20px 0;">
+                        <div>
+                            <h3>From:</h3>
+                            <p>Your Company Name<br>123 Business Street<br>Business City, 10001</p>
+                        </div>
+                        <div>
+                            <h3>To:</h3>
+                            <p>Client Name<br>123 Client Street<br>Client City, 10001</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div style="margin: 20px 0;">
+                        <p><strong>Invoice Number:</strong> ${document.getElementById('success-transaction-id').textContent}</p>
+                        <p><strong>Invoice Date:</strong> ${document.getElementById('success-date').textContent}</p>
+                        <p><strong>Amount:</strong> ${document.getElementById('success-amount').textContent}</p>
+                        <p><strong>Payment Method:</strong> ${document.getElementById('success-method').textContent}</p>
+                    </div>
+                    <hr>
+                    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                        <tr>
+                            <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Description</th>
+                            <th style="text-align: right; padding: 8px; border-bottom: 1px solid #ddd;">Amount</th>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border-bottom: 1px solid #ddd;">Premium Service Package</td>
+                            <td style="text-align: right; padding: 8px; border-bottom: 1px solid #ddd;">${document.getElementById('success-amount').textContent}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; font-weight: bold;">TOTAL</td>
+                            <td style="text-align: right; padding: 8px; font-weight: bold;">${document.getElementById('success-amount').textContent}</td>
+                        </tr>
+                    </table>
+                    <hr>
+                    <p style="font-size: 12px; color: #777;">Terms and Conditions: Payment is due within 15 days. Thank you for your business!</p>
+                </div>
+            `;
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Function to simulate redirecting from payment form
+        function showPaymentStatus(status, amount, errorCode, errorMessage) {
+            let url = window.location.href.split('?')[0] + `?status=${status}&amount=${encodeURIComponent(amount)}`;
+            
+            if (status === 'failure') {
+                url += `&error_code=${errorCode}&message=${encodeURIComponent(errorMessage)}`;
+            }
+            
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "stripe-payment-form",
+  "version": "1.0.0",
+  "description": "Stripe payment form with Netlify functions",
+  "dependencies": {
+    "stripe": "^12.0.0"
+  }
+}
